@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { DashboardHeader } from "./DashboardHeader";
 import { MetricsCards } from "./MetricsCards";
-import { QuickActions } from "./QuickActions";
+import { FunctionalQuickActions } from "./FunctionalQuickActions";
 import { RecentProjects } from "./RecentProjects";
 import { ProcessHealthCharts } from "./ProcessHealthCharts";
 import { NotificationList, Notification } from "./NotificationList";
@@ -283,10 +283,7 @@ export const DashboardContent: React.FC = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <QuickActions 
-            actions={quickActions} 
-            onActionClick={handleActionClick}
-          />
+          <FunctionalQuickActions />
         </div>
         <div>
           <NotificationList 

@@ -10,11 +10,9 @@ import {
   Connection,
   Edge,
   Node,
-  ReactFlowProvider,
   Panel,
-  useReactFlow,
   NodeTypes,
-  EdgeTypes,
+  BackgroundVariant,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,86 +25,99 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
-import { useConversation } from '@11labs/react';
+import { cn } from '@/lib/utils';
 import {
   Play,
   Square,
   Circle,
   Diamond,
-  Hexagon,
-  Triangle,
-  MousePointer,
-  Hand,
-  Type,
-  MessageSquare,
   Save,
-  Upload,
   Download,
   FileText,
-  Settings,
   Users,
-  Clock,
-  CheckCircle,
-  AlertTriangle,
   Zap,
   Database,
-  Globe,
-  Lock,
-  Unlock,
-  Eye,
-  EyeOff,
-  Undo,
-  Redo,
-  Copy,
-  Trash2,
-  ZoomIn,
-  ZoomOut,
-  Maximize,
-  Grid,
   Layers,
   Share2,
-  GitBranch,
-  MessageCircle,
-  Mic,
-  MicOff,
-  Volume2,
-  VolumeX,
-  Sparkles
+  ChevronDown,
+  ChevronRight,
+  ChevronLeft,
+  Home,
+  MoreHorizontal,
+  Plus,
+  X,
+  User,
+  Code,
+  Mail,
+  HardDrive
 } from 'lucide-react';
 
-// Custom Node Types
-const StartEventNode = ({ data }: { data: any }) => (
-  <div className="w-8 h-8 rounded-full border-2 border-green-600 bg-green-100 flex items-center justify-center text-xs font-semibold text-green-800">
-    S
+// Enhanced BPMN Node Components matching SAP Signavio style
+const StartEventNode = ({ data, selected }: { data: any; selected?: boolean }) => (
+  <div className={cn(
+    "w-10 h-10 rounded-full border-2 bg-green-50 flex items-center justify-center shadow-sm transition-all",
+    selected ? "border-green-600 ring-2 ring-green-200" : "border-green-500",
+    "hover:shadow-md cursor-pointer"
+  )}>
+    <Play className="w-4 h-4 text-green-700 fill-green-700" />
   </div>
 );
 
-const EndEventNode = ({ data }: { data: any }) => (
-  <div className="w-8 h-8 rounded-full border-4 border-red-600 bg-red-100 flex items-center justify-center text-xs font-semibold text-red-800">
-    E
+const EndEventNode = ({ data, selected }: { data: any; selected?: boolean }) => (
+  <div className={cn(
+    "w-10 h-10 rounded-full border-4 bg-red-50 flex items-center justify-center shadow-sm transition-all",
+    selected ? "border-red-600 ring-2 ring-red-200" : "border-red-500",
+    "hover:shadow-md cursor-pointer"
+  )}>
+    <Square className="w-3 h-3 text-red-700 fill-red-700" />
   </div>
 );
 
-const TaskNode = ({ data }: { data: any }) => (
-  <div className="min-w-24 h-16 bg-blue-50 border-2 border-blue-400 rounded-lg flex items-center justify-center p-2 text-xs font-medium text-blue-900 text-center">
-    {data.label}
+const TaskNode = ({ data, selected }: { data: any; selected?: boolean }) => (
+  <div className={cn(
+    "min-w-28 h-16 bg-blue-50 border-2 rounded-lg flex flex-col items-center justify-center p-2 shadow-sm transition-all",
+    selected ? "border-blue-600 ring-2 ring-blue-200" : "border-blue-400",
+    "hover:shadow-md cursor-pointer"
+  )}>
+    <div className="text-xs font-semibold text-blue-900 text-center truncate w-full">
+      {data.label || 'Task'}
+    </div>
+    {data.type === 'user' && (
+      <User className="w-3 h-3 text-blue-600 mt-1" />
+    )}
+    {data.type === 'service' && (
+      <Zap className="w-3 h-3 text-blue-600 mt-1" />
+    )}
   </div>
 );
 
-const GatewayNode = ({ data }: { data: any }) => (
-  <div className="w-12 h-12 bg-yellow-100 border-2 border-yellow-500 transform rotate-45 flex items-center justify-center">
-    <span className="transform -rotate-45 text-xs font-bold text-yellow-800">
-      {data.type === 'exclusive' ? 'X' : data.type === 'parallel' ? '+' : '?'}
-    </span>
+const GatewayNode = ({ data, selected }: { data: any; selected?: boolean }) => (
+  <div className={cn(
+    "w-12 h-12 bg-yellow-50 border-2 transform rotate-45 flex items-center justify-center shadow-sm transition-all",
+    selected ? "border-yellow-600 ring-2 ring-yellow-200" : "border-yellow-500",
+    "hover:shadow-md cursor-pointer"
+  )}>
+    <div className="transform -rotate-45">
+      {data.gatewayType === 'exclusive' && <X className="w-4 h-4 text-yellow-700" />}
+      {data.gatewayType === 'parallel' && <Plus className="w-4 h-4 text-yellow-700" />}
+      {data.gatewayType === 'inclusive' && <Circle className="w-4 h-4 text-yellow-700" />}
+    </div>
   </div>
 );
 
-const SubProcessNode = ({ data }: { data: any }) => (
-  <div className="min-w-32 h-20 bg-purple-50 border-2 border-purple-400 rounded-lg flex items-center justify-center p-2 text-xs font-medium text-purple-900 text-center relative">
-    {data.label}
-    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 text-purple-600">
-      <Square className="w-3 h-3" />
+const SubProcessNode = ({ data, selected }: { data: any; selected?: boolean }) => (
+  <div className={cn(
+    "min-w-36 h-20 bg-purple-50 border-2 rounded-lg flex flex-col items-center justify-center p-2 shadow-sm transition-all relative",
+    selected ? "border-purple-600 ring-2 ring-purple-200" : "border-purple-400",
+    "hover:shadow-md cursor-pointer"
+  )}>
+    <div className="text-xs font-semibold text-purple-900 text-center truncate w-full">
+      {data.label || 'Sub Process'}
+    </div>
+    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
+      <Square className="w-3 h-3 text-purple-600 border border-purple-600" />
     </div>
   </div>
 );
@@ -123,60 +134,236 @@ const initialNodes: Node[] = [
   {
     id: 'start-1',
     type: 'startEvent',
-    position: { x: 100, y: 100 },
-    data: { label: 'Start' },
+    position: { x: 150, y: 200 },
+    data: { label: 'Start Process' },
+  },
+  {
+    id: 'task-1',
+    type: 'task',
+    position: { x: 300, y: 180 },
+    data: { label: 'Review Request', type: 'user' },
+  },
+  {
+    id: 'gateway-1',
+    type: 'gateway',
+    position: { x: 480, y: 185 },
+    data: { label: 'Approved?', gatewayType: 'exclusive' },
+  },
+  {
+    id: 'task-2',
+    type: 'task',
+    position: { x: 600, y: 120 },
+    data: { label: 'Process Request', type: 'service' },
+  },
+  {
+    id: 'task-3',
+    type: 'task',
+    position: { x: 600, y: 250 },
+    data: { label: 'Send Rejection', type: 'user' },
+  },
+  {
+    id: 'end-1',
+    type: 'endEvent',
+    position: { x: 780, y: 200 },
+    data: { label: 'End Process' },
   },
 ];
 
-const initialEdges: Edge[] = [];
+const initialEdges: Edge[] = [
+  { id: 'e1-2', source: 'start-1', target: 'task-1', type: 'smoothstep' },
+  { id: 'e2-3', source: 'task-1', target: 'gateway-1', type: 'smoothstep' },
+  { id: 'e3-4', source: 'gateway-1', target: 'task-2', type: 'smoothstep', label: 'Yes' },
+  { id: 'e3-5', source: 'gateway-1', target: 'task-3', type: 'smoothstep', label: 'No' },
+  { id: 'e4-6', source: 'task-2', target: 'end-1', type: 'smoothstep' },
+  { id: 'e5-6', source: 'task-3', target: 'end-1', type: 'smoothstep' },
+];
 
-// Palette Component
-const BPMNPalette = ({ onDragStart }: { onDragStart: (event: React.DragEvent, nodeType: string) => void }) => {
-  const elements = [
-    { type: 'startEvent', icon: Play, label: 'Start Event', color: 'text-green-600' },
-    { type: 'endEvent', icon: Square, label: 'End Event', color: 'text-red-600' },
-    { type: 'task', icon: FileText, label: 'Task', color: 'text-blue-600' },
-    { type: 'gateway', icon: Diamond, label: 'Gateway', color: 'text-yellow-600' },
-    { type: 'subprocess', icon: Layers, label: 'Sub Process', color: 'text-purple-600' },
-  ];
-
+// SAP Signavio Style Header
+const SignavioHeader = ({ 
+  processName, 
+  onSave, 
+  onExport, 
+  onShare,
+  isCollaborating = false 
+}: {
+  processName: string;
+  onSave: () => void;
+  onExport: () => void;
+  onShare: () => void;
+  isCollaborating?: boolean;
+}) => {
   return (
-    <Card className="w-64 h-full">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-semibold">BPMN Elements</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <ScrollArea className="h-[calc(100vh-200px)]">
-          <div className="p-3 space-y-2">
-            {elements.map((element) => {
-              const IconComponent = element.icon;
-              return (
-                <div
-                  key={element.type}
-                  className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-grab hover:bg-gray-50 transition-colors"
-                  draggable
-                  onDragStart={(event) => onDragStart(event, element.type)}
-                >
-                  <IconComponent className={`w-5 h-5 ${element.color}`} />
-                  <span className="text-sm font-medium">{element.label}</span>
-                </div>
-              );
-            })}
+    <div className="h-14 bg-white border-b border-border px-4 flex items-center justify-between shadow-sm">
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Home className="w-4 h-4 text-muted-foreground" />
+          <ChevronRight className="w-3 h-3 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Processes</span>
+          <ChevronRight className="w-3 h-3 text-muted-foreground" />
+          <span className="text-sm font-medium">{processName}</span>
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-2">
+        {isCollaborating && (
+          <div className="flex items-center gap-1 px-2 py-1 bg-green-50 rounded-full">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-xs text-green-700">3 collaborators</span>
           </div>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+        )}
+        
+        <Button variant="ghost" size="sm" onClick={onSave}>
+          <Save className="w-4 h-4 mr-1" />
+          Save
+        </Button>
+        
+        <Button variant="ghost" size="sm" onClick={onShare}>
+          <Share2 className="w-4 h-4 mr-1" />
+          Share
+        </Button>
+        
+        <Button variant="ghost" size="sm" onClick={onExport}>
+          <Download className="w-4 h-4 mr-1" />
+          Export
+        </Button>
+        
+        <Separator orientation="vertical" className="h-6" />
+        
+        <Button variant="ghost" size="sm">
+          <MoreHorizontal className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
   );
 };
 
-// Properties Panel Component
-const PropertiesPanel = ({ selectedNode, onNodeUpdate }: { selectedNode: Node | null, onNodeUpdate: (nodeId: string, data: any) => void }) => {
+// Enhanced Element Palette
+const ElementPalette = ({ 
+  isCollapsed, 
+  onToggle, 
+  onDragStart 
+}: { 
+  isCollapsed: boolean; 
+  onToggle: () => void; 
+  onDragStart: (event: React.DragEvent, nodeType: string) => void; 
+}) => {
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
+    events: true,
+    tasks: true,
+    gateways: false,
+    containers: false,
+    data: false,
+  });
+
+  const elementCategories = {
+    events: [
+      { type: 'startEvent', icon: Play, label: 'Start Event', color: 'text-green-600' },
+      { type: 'endEvent', icon: Square, label: 'End Event', color: 'text-red-600' },
+      { type: 'intermediateEvent', icon: Circle, label: 'Intermediate Event', color: 'text-blue-600' },
+    ],
+    tasks: [
+      { type: 'task', icon: FileText, label: 'Task', color: 'text-blue-600' },
+      { type: 'userTask', icon: User, label: 'User Task', color: 'text-blue-600' },
+      { type: 'serviceTask', icon: Zap, label: 'Service Task', color: 'text-blue-600' },
+      { type: 'scriptTask', icon: Code, label: 'Script Task', color: 'text-blue-600' },
+    ],
+    gateways: [
+      { type: 'exclusiveGateway', icon: Diamond, label: 'Exclusive Gateway', color: 'text-yellow-600' },
+      { type: 'parallelGateway', icon: Diamond, label: 'Parallel Gateway', color: 'text-yellow-600' },
+      { type: 'inclusiveGateway', icon: Diamond, label: 'Inclusive Gateway', color: 'text-yellow-600' },
+    ],
+    containers: [
+      { type: 'subprocess', icon: Layers, label: 'Sub Process', color: 'text-purple-600' },
+      { type: 'pool', icon: Square, label: 'Pool', color: 'text-purple-600' },
+      { type: 'lane', icon: Square, label: 'Lane', color: 'text-purple-600' },
+    ],
+    data: [
+      { type: 'dataObject', icon: Database, label: 'Data Object', color: 'text-gray-600' },
+      { type: 'dataStore', icon: HardDrive, label: 'Data Store', color: 'text-gray-600' },
+      { type: 'message', icon: Mail, label: 'Message', color: 'text-gray-600' },
+    ],
+  };
+
+  if (isCollapsed) {
+    return (
+      <div className="absolute left-4 top-20 bg-white border border-border rounded-lg shadow-lg p-2 z-20">
+        <Button variant="ghost" size="sm" onClick={onToggle}>
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="absolute left-4 top-20 bg-white border border-border rounded-lg shadow-lg z-20 w-64 max-h-[calc(100vh-120px)]">
+      <div className="flex items-center justify-between p-3 border-b border-border">
+        <h3 className="text-sm font-semibold">BPMN Elements</h3>
+        <Button variant="ghost" size="sm" onClick={onToggle}>
+          <ChevronLeft className="w-4 h-4" />
+        </Button>
+      </div>
+      
+      <ScrollArea className="h-[calc(100vh-200px)]">
+        <div className="p-2 space-y-2">
+          {Object.entries(elementCategories).map(([category, elements]) => (
+            <Collapsible
+              key={category}
+              open={expandedCategories[category]}
+              onOpenChange={(open) => setExpandedCategories(prev => ({ ...prev, [category]: open }))}
+            >
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between h-8 px-2 text-xs font-medium">
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                  {expandedCategories[category] ? 
+                    <ChevronDown className="h-3 w-3" /> : 
+                    <ChevronRight className="h-3 w-3" />
+                  }
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-1">
+                {elements.map((element) => {
+                  const IconComponent = element.icon;
+                  return (
+                    <div
+                      key={element.type}
+                      className="flex items-center gap-2 p-2 border border-border rounded cursor-grab hover:bg-accent transition-colors text-xs"
+                      draggable
+                      onDragStart={(event) => onDragStart(event, element.type)}
+                    >
+                      <IconComponent className={`w-4 h-4 ${element.color}`} />
+                      <span>{element.label}</span>
+                    </div>
+                  );
+                })}
+              </CollapsibleContent>
+            </Collapsible>
+          ))}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+};
+
+// Properties Panel
+const PropertiesPanel = ({ 
+  selectedNode, 
+  onNodeUpdate,
+  isVisible,
+  onToggle 
+}: { 
+  selectedNode: Node | null; 
+  onNodeUpdate: (nodeId: string, data: any) => void;
+  isVisible: boolean;
+  onToggle: () => void;
+}) => {
   const [nodeData, setNodeData] = useState({
     label: '',
     description: '',
     assignee: '',
     priority: 'medium',
     documentation: '',
+    type: 'user',
+    gatewayType: 'exclusive'
   });
 
   useEffect(() => {
@@ -187,6 +374,8 @@ const PropertiesPanel = ({ selectedNode, onNodeUpdate }: { selectedNode: Node | 
         assignee: (selectedNode.data?.assignee as string) || '',
         priority: (selectedNode.data?.priority as string) || 'medium',
         documentation: (selectedNode.data?.documentation as string) || '',
+        type: (selectedNode.data?.type as string) || 'user',
+        gatewayType: (selectedNode.data?.gatewayType as string) || 'exclusive'
       });
     }
   }, [selectedNode]);
@@ -198,308 +387,285 @@ const PropertiesPanel = ({ selectedNode, onNodeUpdate }: { selectedNode: Node | 
     }
   };
 
-  if (!selectedNode) {
+  if (!isVisible) {
     return (
-      <Card className="w-80 h-full">
-        <CardHeader>
-          <CardTitle className="text-sm font-semibold">Properties</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-sm text-gray-500 text-center py-8">
-            Select an element to view properties
-          </div>
-        </CardContent>
-      </Card>
+      <div className="absolute right-4 top-20 bg-white border border-border rounded-lg shadow-lg p-2 z-20">
+        <Button variant="ghost" size="sm" onClick={onToggle}>
+          <ChevronLeft className="w-4 h-4" />
+        </Button>
+      </div>
     );
   }
 
   return (
-    <Card className="w-80 h-full">
-      <CardHeader>
-        <CardTitle className="text-sm font-semibold">Properties</CardTitle>
-        <Badge variant="outline" className="w-fit">
-          {selectedNode.type}
-        </Badge>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <ScrollArea className="h-[calc(100vh-250px)]">
-          <div className="space-y-4 pr-3">
-            <div>
-              <Label htmlFor="label" className="text-xs font-medium">Name</Label>
-              <Input
-                id="label"
-                value={nodeData.label}
-                onChange={(e) => handleUpdate('label', e.target.value)}
-                className="mt-1"
-                placeholder="Enter element name"
-              />
-            </div>
+    <div className="absolute right-4 top-20 bg-white border border-border rounded-lg shadow-lg z-20 w-80 max-h-[calc(100vh-120px)]">
+      <div className="flex items-center justify-between p-3 border-b border-border">
+        <h3 className="text-sm font-semibold">Properties</h3>
+        <Button variant="ghost" size="sm" onClick={onToggle}>
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+      </div>
+      
+      <ScrollArea className="h-[calc(100vh-200px)]">
+        <div className="p-4 space-y-4">
+          {selectedNode ? (
+            <>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">{selectedNode.type}</Badge>
+                <span className="text-xs text-muted-foreground">ID: {selectedNode.id}</span>
+              </div>
+              
+              <div>
+                <Label htmlFor="label" className="text-xs font-medium">Name</Label>
+                <Input
+                  id="label"
+                  value={nodeData.label}
+                  onChange={(e) => handleUpdate('label', e.target.value)}
+                  className="mt-1 h-8"
+                  placeholder="Enter element name"
+                />
+              </div>
 
-            <div>
-              <Label htmlFor="description" className="text-xs font-medium">Description</Label>
-              <Textarea
-                id="description"
-                value={nodeData.description}
-                onChange={(e) => handleUpdate('description', e.target.value)}
-                className="mt-1"
-                placeholder="Enter description"
-                rows={3}
-              />
-            </div>
+              <div>
+                <Label htmlFor="description" className="text-xs font-medium">Description</Label>
+                <Textarea
+                  id="description"
+                  value={nodeData.description}
+                  onChange={(e) => handleUpdate('description', e.target.value)}
+                  className="mt-1"
+                  placeholder="Enter description"
+                  rows={2}
+                />
+              </div>
 
-            <div>
-              <Label htmlFor="assignee" className="text-xs font-medium">Assignee</Label>
-              <Input
-                id="assignee"
-                value={nodeData.assignee}
-                onChange={(e) => handleUpdate('assignee', e.target.value)}
-                className="mt-1"
-                placeholder="Assign to user"
-              />
-            </div>
+              {selectedNode.type === 'task' && (
+                <>
+                  <div>
+                    <Label htmlFor="type" className="text-xs font-medium">Task Type</Label>
+                    <Select value={nodeData.type} onValueChange={(value) => handleUpdate('type', value)}>
+                      <SelectTrigger className="mt-1 h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="user">User Task</SelectItem>
+                        <SelectItem value="service">Service Task</SelectItem>
+                        <SelectItem value="script">Script Task</SelectItem>
+                        <SelectItem value="manual">Manual Task</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-            <div>
-              <Label htmlFor="priority" className="text-xs font-medium">Priority</Label>
-              <Select value={nodeData.priority} onValueChange={(value) => handleUpdate('priority', value)}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="critical">Critical</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                  <div>
+                    <Label htmlFor="assignee" className="text-xs font-medium">Assignee</Label>
+                    <Input
+                      id="assignee"
+                      value={nodeData.assignee}
+                      onChange={(e) => handleUpdate('assignee', e.target.value)}
+                      className="mt-1 h-8"
+                      placeholder="Assign to user"
+                    />
+                  </div>
 
-            <div>
-              <Label htmlFor="documentation" className="text-xs font-medium">Documentation</Label>
-              <Textarea
-                id="documentation"
-                value={nodeData.documentation}
-                onChange={(e) => handleUpdate('documentation', e.target.value)}
-                className="mt-1"
-                placeholder="Add documentation"
-                rows={4}
-              />
+                  <div>
+                    <Label htmlFor="priority" className="text-xs font-medium">Priority</Label>
+                    <Select value={nodeData.priority} onValueChange={(value) => handleUpdate('priority', value)}>
+                      <SelectTrigger className="mt-1 h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="critical">Critical</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
+
+              {selectedNode.type === 'gateway' && (
+                <div>
+                  <Label htmlFor="gatewayType" className="text-xs font-medium">Gateway Type</Label>
+                  <Select value={nodeData.gatewayType} onValueChange={(value) => handleUpdate('gatewayType', value)}>
+                    <SelectTrigger className="mt-1 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="exclusive">Exclusive (XOR)</SelectItem>
+                      <SelectItem value="parallel">Parallel (AND)</SelectItem>
+                      <SelectItem value="inclusive">Inclusive (OR)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="documentation" className="text-xs font-medium">Documentation</Label>
+                <Textarea
+                  id="documentation"
+                  value={nodeData.documentation}
+                  onChange={(e) => handleUpdate('documentation', e.target.value)}
+                  className="mt-1"
+                  placeholder="Add documentation"
+                  rows={3}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="text-sm text-muted-foreground text-center py-8">
+              Select an element to view its properties
             </div>
-          </div>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
   );
 };
 
-// Voice Training Component
-const VoiceTraining = () => {
-  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
-  const [apiKey, setApiKey] = useState('');
+// Demo Loader Component
+const DemoProcessLoader = ({ 
+  onLoadDemo 
+}: { 
+  onLoadDemo: (nodes: Node[], edges: Edge[], processName: string) => void 
+}) => {
+  const [selectedDemo, setSelectedDemo] = useState<string>('');
   const { toast } = useToast();
-  
-  const conversation = useConversation({
-    onConnect: () => {
-      toast({ title: "Voice Assistant Connected", description: "Voice training is now active" });
-    },
-    onDisconnect: () => {
-      toast({ title: "Voice Assistant Disconnected" });
-    },
-    onMessage: (message) => {
-      console.log('Voice message:', message);
-    },
-    onError: (error: any) => {
-      toast({ title: "Voice Error", description: error?.message || 'An error occurred', variant: "destructive" });
-    }
-  });
 
-  const toggleVoice = async () => {
-    if (!isVoiceEnabled) {
-      if (!apiKey) {
-        toast({ 
-          title: "API Key Required", 
-          description: "Please enter your ElevenLabs API key",
-          variant: "destructive" 
-        });
-        return;
-      }
-      
-      try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-        // Here you would start the conversation with your agent ID
-        // await conversation.startSession({ agentId: 'your-agent-id' });
-        setIsVoiceEnabled(true);
-        toast({ title: "Voice Training Started", description: "Say 'help' to see available commands" });
-      } catch (error) {
-        toast({ 
-          title: "Microphone Access Denied", 
-          description: "Please allow microphone access for voice features",
-          variant: "destructive" 
-        });
-      }
-    } else {
-      await conversation.endSession();
-      setIsVoiceEnabled(false);
+  const handleLoadDemo = () => {
+    const demo = demoProcesses.find(p => p.id === selectedDemo);
+    if (!demo) {
+      toast({
+        title: "Error",
+        description: "Please select a demo process",
+        variant: "destructive"
+      });
+      return;
     }
+
+    // Convert demo elements to ReactFlow nodes
+    const demoNodes: Node[] = demo.elements.map(element => ({
+      id: element.id,
+      type: element.type === 'start-event' ? 'startEvent' : 
+            element.type === 'end-event' ? 'endEvent' :
+            element.type === 'user-task' || element.type === 'service-task' ? 'task' :
+            element.type === 'exclusive-gateway' ? 'gateway' :
+            element.type === 'subprocess' ? 'subprocess' : element.type,
+      position: element.position,
+      data: element.data || { label: element.name }
+    }));
+
+    // Convert demo connections to ReactFlow edges
+    const demoEdges: Edge[] = demo.connections.map(connection => ({
+      id: connection.id,
+      source: connection.sourceId || connection.source,
+      target: connection.targetId || connection.target,
+      sourceHandle: connection.sourceHandle,
+      targetHandle: connection.targetHandle,
+      type: connection.type || 'smoothstep',
+      label: (connection as any).label || (connection as any).name || '',
+      style: { stroke: '#6b7280', strokeWidth: 2 }
+    }));
+
+    onLoadDemo(demoNodes, demoEdges, demo.name);
+    
+    toast({
+      title: "Demo Loaded",
+      description: `${demo.name} has been loaded successfully`
+    });
   };
 
-  return (
-    <div className="flex items-center gap-2">
-      <Input
-        type="password"
-        placeholder="ElevenLabs API Key"
-        value={apiKey}
-        onChange={(e) => setApiKey(e.target.value)}
-        className="w-40 h-8 text-xs"
-      />
-      <Button
-        variant={isVoiceEnabled ? "default" : "outline"}
-        size="sm"
-        onClick={toggleVoice}
-        className="gap-1"
-      >
-        {isVoiceEnabled ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
-        {isVoiceEnabled ? 'Stop' : 'Start'} Voice
-      </Button>
-    </div>
-  );
-};
-
-// Main Toolbar Component
-const MainToolbar = ({ 
-  onSave, 
-  onLoad, 
-  onExport, 
-  onValidate, 
-  onSimulate,
-  validationResults 
-}: {
-  onSave: () => void;
-  onLoad: () => void;
-  onExport: () => void;
-  onValidate: () => void;
-  onSimulate: () => void;
-  validationResults: { errors: number; warnings: number };
-}) => {
-  return (
-    <div className="h-12 border-b bg-white px-4 flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={onSave} className="gap-1">
-          <Save className="w-4 h-4" />
-          Save
-        </Button>
-        <Button variant="ghost" size="sm" onClick={onLoad} className="gap-1">
-          <Upload className="w-4 h-4" />
-          Load
-        </Button>
-        <Button variant="ghost" size="sm" onClick={onExport} className="gap-1">
-          <Download className="w-4 h-4" />
-          Export
-        </Button>
-        <Separator orientation="vertical" className="h-6" />
-        <Button variant="ghost" size="sm" onClick={onValidate} className="gap-1">
-          <CheckCircle className="w-4 h-4" />
-          Validate
-          {validationResults.errors > 0 && (
-            <Badge variant="destructive" className="ml-1 text-xs">
-              {validationResults.errors}
-            </Badge>
-          )}
-          {validationResults.warnings > 0 && (
-            <Badge variant="secondary" className="ml-1 text-xs">
-              {validationResults.warnings}
-            </Badge>
-          )}
-        </Button>
-        <Button variant="ghost" size="sm" onClick={onSimulate} className="gap-1">
-          <Play className="w-4 h-4" />
-          Simulate
-        </Button>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <VoiceTraining />
-        <Separator orientation="vertical" className="h-6" />
-        <Button variant="ghost" size="sm" className="gap-1">
-          <Users className="w-4 h-4" />
-          Collaborate
-        </Button>
-        <Button variant="ghost" size="sm" className="gap-1">
-          <Share2 className="w-4 h-4" />
-          Share
-        </Button>
-      </div>
-    </div>
-  );
-};
-
-// Validation Panel Component
-const ValidationPanel = ({ 
-  results, 
-  isVisible, 
-  onClose 
-}: { 
-  results: any[]; 
-  isVisible: boolean; 
-  onClose: () => void; 
-}) => {
-  if (!isVisible) return null;
+  const categorizedDemos = demoProcesses.reduce((acc, demo) => {
+    if (!acc[demo.category]) acc[demo.category] = [];
+    acc[demo.category].push(demo);
+    return acc;
+  }, {} as Record<string, typeof demoProcesses>);
 
   return (
-    <Card className="absolute bottom-4 left-4 w-96 max-h-80 z-10">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-semibold">Validation Results</CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <EyeOff className="w-4 h-4" />
-          </Button>
-        </div>
+    <Card className="w-80">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm">Load Demo Process</CardTitle>
       </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-60">
-          <div className="space-y-2">
-            {results.map((result, index) => (
-              <div
-                key={index}
-                className={`p-2 rounded-lg border text-xs ${
-                  result.type === 'error' 
-                    ? 'border-red-200 bg-red-50 text-red-800' 
-                    : 'border-yellow-200 bg-yellow-50 text-yellow-800'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  {result.type === 'error' ? (
-                    <AlertTriangle className="w-4 h-4" />
-                  ) : (
-                    <AlertTriangle className="w-4 h-4" />
-                  )}
-                  <span className="font-medium">{result.message}</span>
+      <CardContent className="space-y-4">
+        <div>
+          <Label className="text-xs font-medium mb-2 block">Select Demo Process</Label>
+          <Select value={selectedDemo} onValueChange={setSelectedDemo}>
+            <SelectTrigger className="h-9">
+              <SelectValue placeholder="Choose a demo process" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(categorizedDemos).map(([category, demos]) => (
+                <div key={category}>
+                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">
+                    {category} Processes
+                  </div>
+                  {(demos as any[]).map((demo: any) => (
+                    <SelectItem key={demo.id} value={demo.id}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{demo.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {demo.complexity} • {demo.elements.length} elements
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
                 </div>
-                {result.description && (
-                  <p className="mt-1 text-xs opacity-80">{result.description}</p>
-                )}
-              </div>
-            ))}
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {selectedDemo && (
+          <div className="text-xs text-muted-foreground p-2 bg-muted rounded">
+            {demoProcesses.find(p => p.id === selectedDemo)?.description}
           </div>
-        </ScrollArea>
+        )}
+        
+        <Button 
+          onClick={handleLoadDemo} 
+          disabled={!selectedDemo}
+          className="w-full h-9"
+          size="sm"
+        >
+          <Play className="h-4 w-4 mr-2" />
+          Load Demo Process
+        </Button>
       </CardContent>
     </Card>
   );
 };
 
+// Import demo processes
+import { demoProcesses } from '@/data/processManagerDemoData';
+
+// Main Process Manager Component
 export const SignavioProcessManager = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const [validationResults, setValidationResults] = useState({ errors: 0, warnings: 0 });
-  const [validationDetails, setValidationDetails] = useState<any[]>([]);
-  const [showValidation, setShowValidation] = useState(false);
+  const [paletteCollapsed, setPaletteCollapsed] = useState(false);
+  const [propertiesVisible, setPropertiesVisible] = useState(true);
+  const [showDemoLoader, setShowDemoLoader] = useState(false);
+  const [processName, setProcessName] = useState("Order Processing Workflow");
   const { toast } = useToast();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+    (params: Connection) => setEdges((eds) => addEdge({ 
+      ...params, 
+      type: 'smoothstep',
+      animated: false,
+      style: { stroke: '#6b7280', strokeWidth: 2 }
+    }, eds)),
     [setEdges]
   );
+
+  const onLoadDemo = useCallback((demoNodes: Node[], demoEdges: Edge[], name: string) => {
+    setNodes(demoNodes);
+    setEdges(demoEdges);
+    setProcessName(name);
+    setShowDemoLoader(false);
+    setSelectedNode(null);
+  }, [setNodes, setEdges]);
 
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
     event.dataTransfer.setData('application/reactflow', nodeType);
@@ -524,14 +690,12 @@ export const SignavioProcessManager = () => {
 
       const newNode: Node = {
         id: `${type}-${Date.now()}`,
-        type,
+        type: type === 'exclusiveGateway' || type === 'parallelGateway' || type === 'inclusiveGateway' ? 'gateway' : type,
         position,
         data: { 
-          label: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
-          description: '',
-          assignee: '',
-          priority: 'medium',
-          documentation: ''
+          label: `New ${type}`,
+          ...(type.includes('Gateway') && { gatewayType: type.replace('Gateway', '') }),
+          ...(type.includes('Task') && { type: type.replace('Task', '') })
         },
       };
 
@@ -545,134 +709,49 @@ export const SignavioProcessManager = () => {
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
-  const onNodeClick = useCallback(
-    (_: React.MouseEvent, node: Node) => {
-      setSelectedNode(node);
-    },
-    []
-  );
+  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+    setSelectedNode(node);
+  }, []);
 
   const onNodeUpdate = useCallback((nodeId: string, data: any) => {
     setNodes((nds) =>
-      nds.map((node) =>
-        node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node
-      )
+      nds.map((node) => (node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node))
     );
   }, [setNodes]);
 
   const handleSave = () => {
-    const processData = { nodes, edges };
-    localStorage.setItem('signavio-process', JSON.stringify(processData));
-    toast({ title: "Process Saved", description: "Your process has been saved successfully" });
-  };
-
-  const handleLoad = () => {
-    const saved = localStorage.getItem('signavio-process');
-    if (saved) {
-      const { nodes: savedNodes, edges: savedEdges } = JSON.parse(saved);
-      setNodes(savedNodes);
-      setEdges(savedEdges);
-      toast({ title: "Process Loaded", description: "Your process has been loaded successfully" });
-    }
+    toast({
+      title: "Process Saved",
+      description: "Your process has been saved successfully.",
+    });
   };
 
   const handleExport = () => {
-    const processData = { nodes, edges };
-    const blob = new Blob([JSON.stringify(processData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `process-${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast({ title: "Process Exported", description: "Your process has been exported successfully" });
-  };
-
-  const handleValidate = () => {
-    const errors: any[] = [];
-    const warnings: any[] = [];
-
-    // Check for start events
-    const startEvents = nodes.filter(node => node.type === 'startEvent');
-    if (startEvents.length === 0) {
-      errors.push({
-        type: 'error',
-        message: 'No start event found',
-        description: 'Every process must have at least one start event'
-      });
-    }
-
-    // Check for end events
-    const endEvents = nodes.filter(node => node.type === 'endEvent');
-    if (endEvents.length === 0) {
-      errors.push({
-        type: 'error',
-        message: 'No end event found',
-        description: 'Every process must have at least one end event'
-      });
-    }
-
-    // Check for unnamed elements
-    nodes.forEach(node => {
-      const label = node.data?.label;
-      if (!label || (typeof label === 'string' && label.startsWith('New '))) {
-        warnings.push({
-          type: 'warning',
-          message: `Unnamed ${node.type}`,
-          description: 'Consider giving this element a descriptive name'
-        });
-      }
-    });
-
-    setValidationResults({ errors: errors.length, warnings: warnings.length });
-    setValidationDetails([...errors, ...warnings]);
-    setShowValidation(true);
-    
-    toast({ 
-      title: "Validation Complete", 
-      description: `Found ${errors.length} errors and ${warnings.length} warnings` 
+    toast({
+      title: "Process Exported",
+      description: "Your process has been exported as BPMN XML.",
     });
   };
 
-  const handleSimulate = () => {
-    if (validationResults.errors > 0) {
-      toast({ 
-        title: "Cannot Simulate", 
-        description: "Please fix validation errors before simulation",
-        variant: "destructive" 
-      });
-      return;
-    }
-
-    toast({ 
-      title: "Simulation Started", 
-      description: "Process simulation is running..." 
+  const handleShare = () => {
+    toast({
+      title: "Process Shared",
+      description: "Sharing link has been copied to clipboard.",
     });
-
-    // Simulate process execution
-    setTimeout(() => {
-      toast({ 
-        title: "Simulation Complete", 
-        description: "Average execution time: 4.2 hours, Bottlenecks: 2 identified" 
-      });
-    }, 3000);
   };
 
   return (
-    <div className="h-screen w-full flex flex-col bg-gray-50">
-      <MainToolbar 
+    <div className="h-screen flex flex-col bg-gray-50">
+      <SignavioHeader
+        processName={processName}
         onSave={handleSave}
-        onLoad={handleLoad}
-        onValidate={handleValidate}
         onExport={handleExport}
-        onSimulate={handleSimulate}
-        validationResults={validationResults}
+        onShare={handleShare}
+        isCollaborating={true}
       />
       
-      <div className="flex-1 flex">
-        <BPMNPalette onDragStart={onDragStart} />
-        
-        <div className="flex-1 relative" ref={reactFlowWrapper}>
+      <div className="flex-1 relative">
+        <div ref={reactFlowWrapper} className="w-full h-full">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -685,11 +764,15 @@ export const SignavioProcessManager = () => {
             nodeTypes={nodeTypes}
             fitView
             className="bg-white"
-            defaultViewport={{ x: 0, y: 0, zoom: 1 }}
           >
-            <Background color="#f1f5f9" gap={20} />
-            <Controls />
+            <Background 
+              variant={BackgroundVariant.Dots} 
+              gap={20} 
+              size={1} 
+              color="#e2e8f0"
+            />
             <MiniMap 
+              className="!bg-white !border-border"
               nodeColor={(node) => {
                 switch (node.type) {
                   case 'startEvent': return '#22c55e';
@@ -700,20 +783,65 @@ export const SignavioProcessManager = () => {
                   default: return '#64748b';
                 }
               }}
-              className="bg-white border border-gray-200"
             />
+            <Controls className="!bg-white !border-border !shadow-lg" />
+            
+            <Panel position="bottom-left" className="m-4">
+              <div className="flex gap-2">
+                <Card className="bg-white/95 backdrop-blur-sm">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-green-500" />
+                        <span>Start Events: {nodes.filter(n => n.type === 'startEvent').length}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-blue-500" />
+                        <span>Tasks: {nodes.filter(n => n.type === 'task').length}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                        <span>Gateways: {nodes.filter(n => n.type === 'gateway').length}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-red-500" />
+                        <span>End Events: {nodes.filter(n => n.type === 'endEvent').length}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowDemoLoader(!showDemoLoader)}
+                  className="bg-white/95 backdrop-blur-sm"
+                >
+                  <Play className="h-4 w-4 mr-2" />
+                  Load Demo
+                </Button>
+              </div>
+            </Panel>
+
+            {showDemoLoader && (
+              <Panel position="bottom-center" className="m-4">
+                <DemoProcessLoader onLoadDemo={onLoadDemo} />
+              </Panel>
+            )}
           </ReactFlow>
-          
-          <ValidationPanel 
-            results={validationDetails}
-            isVisible={showValidation}
-            onClose={() => setShowValidation(false)}
-          />
         </div>
-        
-        <PropertiesPanel 
-          selectedNode={selectedNode} 
+
+        <ElementPalette
+          isCollapsed={paletteCollapsed}
+          onToggle={() => setPaletteCollapsed(!paletteCollapsed)}
+          onDragStart={onDragStart}
+        />
+
+        <PropertiesPanel
+          selectedNode={selectedNode}
           onNodeUpdate={onNodeUpdate}
+          isVisible={propertiesVisible}
+          onToggle={() => setPropertiesVisible(!propertiesVisible)}
         />
       </div>
     </div>

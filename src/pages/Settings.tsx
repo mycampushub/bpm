@@ -323,6 +323,25 @@ export default function Settings() {
                     />
                   </div>
                   
+                  <Card className="p-4 bg-muted/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Volume2 className="h-4 w-4" />
+                        <Label>Voice Training</Label>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Configure voice synthesis for process guidance and accessibility
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => window.open('/settings?tab=voice', '_blank')}
+                    >
+                      Open Voice Training
+                    </Button>
+                  </Card>
+                  
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="compact-mode">Compact Mode</Label>

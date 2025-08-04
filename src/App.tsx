@@ -31,10 +31,12 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <VoiceProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+        <VoiceTrainerProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <VoiceTrainerToggle />
+            <BrowserRouter basename="/bpm">
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
@@ -54,6 +56,7 @@ const App = () => (
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
+        </VoiceTrainerProvider>
       </VoiceProvider>
     </AuthProvider>
   </QueryClientProvider>

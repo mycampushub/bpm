@@ -11,9 +11,9 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { Search, Bell, Settings, LogOut, User, Shield } from 'lucide-react';
+import { Search, Bell, Settings, LogOut, User, Shield, ArrowLeft, Home } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   pageTitle: string;
@@ -21,6 +21,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ pageTitle }) => {
   const { user, logout, hasRole } = useAuth();
+  const navigate = useNavigate();
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -37,6 +38,24 @@ export const Header: React.FC<HeaderProps> = ({ pageTitle }) => {
     <header className="border-b bg-white px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(-1)}
+            className="flex items-center space-x-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/')}
+            className="flex items-center space-x-2"
+          >
+            <Home className="h-4 w-4" />
+            <span>Home</span>
+          </Button>
           <h1 className="text-xl font-semibold text-gray-900">{pageTitle}</h1>
         </div>
         
